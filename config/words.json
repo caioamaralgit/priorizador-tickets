@@ -1,0 +1,10 @@
+{
+    "bad-words": [ 
+        "aguardando", "aguardo", "até", "atrasado", "atraso", "demora", "demorou", "insatisfeito", "não", 
+        "providencias", "PROCON", "reclamação", "reclamações", "Reclame", "ruim", "solução", "???" 
+    ],
+    "good-words":  [
+        "agradecer", "atenção", "boa", "bom", "feliz", "gentileza", "gostei", "obrigada", "obrigado", 
+        "ótima", "ótimo", "parabéns", "simpatia"
+    ]
+}
