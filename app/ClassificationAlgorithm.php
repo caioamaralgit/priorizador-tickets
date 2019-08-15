@@ -51,7 +51,10 @@ class ClassificationAlgorithm
 
         $highPriority = $this->score >= $this->highPriorityScore;
 
-        return $highPriority ? "Alta" : "Normal";
+        return [
+            "priority" => $highPriority ? "Alta" : "Normal",
+            "score" => $this->score
+        ];
     }
 
     private function clearString($string)

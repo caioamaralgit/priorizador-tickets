@@ -40,7 +40,10 @@ class ClassificateTickets extends Command
         {
             $this->algorithm->assumeTicket($ticket);
 
-            $tickets[$index]["Classificacao"] = $this->algorithm->classificate();
+            $classificationResults = $this->algorithm->classificate();
+
+            $tickets[$index]["Pontuacao"] = $classificationResults["score"];
+            $tickets[$index]["Classificacao"] = $classificationResults["priority"];
         }
 
         \Redis::flushAll();
