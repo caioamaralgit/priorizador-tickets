@@ -109,7 +109,7 @@ class ClassificateTickets extends Command
                     "customer_name" => $ticket["CustomerName"], 
                     "customer_email" => $ticket["CustomerEmail"], 
                     "score" => $ticket["Score"], 
-                    "classification" => $ticket["Classification"],
+                    "priority" => $ticket["Classification"],
                     "created_at" => $ticket["DateCreate"],
                     "updated_at" => $ticket["DateUpdate"]
                 ]);
@@ -118,7 +118,7 @@ class ClassificateTickets extends Command
             {
                 $ticketRecord->update([
                     "score" => $ticket["Score"], 
-                    "classification" => $ticket["Classification"],
+                    "priority" => $ticket["Classification"],
                     "updated_at" => $ticket["DateUpdate"]
                 ]);
             }

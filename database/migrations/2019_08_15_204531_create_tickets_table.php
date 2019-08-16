@@ -15,7 +15,7 @@ class CreateTicketsTable extends Migration
             $table->string("customer_name");
             $table->string("customer_email");
             $table->double("score");
-            $table->string("classification", 6);
+            $table->string("priority", 6);
             $table->timestamps();
         });
     }
