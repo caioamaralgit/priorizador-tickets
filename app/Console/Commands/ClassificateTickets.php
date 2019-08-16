@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\ClassificationAlgorithm;
+use App\Interactions;
+use App\Tickets;
 use Illuminate\Console\Command;
 
 class ClassificateTickets extends Command
@@ -10,7 +12,8 @@ class ClassificateTickets extends Command
     protected $description = 'Classifica os tickets do arquivo indicado.';
     protected $signature = 'classificate 
         {file : Caminho absoluto do arquivo JSON a ser classificado.}     
-        {output? : Diretório onde o novo JSON deve ser colocado. Caso nulo o programa assumirá o diretório do arquivo de entrada.}';
+        {output? : Diretório onde o novo JSON deve ser colocado. Caso seja nulo, o programa sobrescreverá o arquivo de entrada.}
+        {--s|save : Determina que os registros precisam ser guardados no banco de dados durante o processo. Isso pode aumentar muito o tempo de execução.}';
 
     protected $algorithm;
     protected $file;
@@ -20,7 +23,7 @@ class ClassificateTickets extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->startTime = date("d/m/Y H:i:s.").gettimeofday()["usec"]; // Suggested by "bamossza" in https://stackoverflow.com/a/46058305/6161969
+        $this->startTime = date("d/m/Y H:i:s.") . gettimeofday()["usec"]; // Suggested by "bamossza" in https://stackoverflow.com/a/46058305/6161969
         $this->algorithm = new ClassificationAlgorithm();
     }
 
@@ -42,15 +45,20 @@ class ClassificateTickets extends Command
 
             $classificationResults = $this->algorithm->classificate();
 
-            $tickets[$index]["Pontuacao"] = $classificationResults["score"];
-            $tickets[$index]["Classificacao"] = $classificationResults["priority"];
+            $tickets[$index]["Score"] = $classificationResults["score"];
+            $tickets[$index]["Classification"] = $classificationResults["priority"];
         }
 
         \Redis::flushAll();
 
-        $this->saveResultFile($tickets);
+        $this->exportResultFile($tickets);
+        
+        if ($this->option("save")) 
+        {
+            $this->saveTickets($tickets);
+        }
 
-        $finishTime = date("d/m/Y H:i:s.").gettimeofday()["usec"];
+        $finishTime = date("d/m/Y H:i:s.") . gettimeofday()["usec"];
         
         echo "\n-> Processo finalizado em " . $finishTime;
     }
@@ -60,6 +68,13 @@ class ClassificateTickets extends Command
         if ($output != "") return $output;
         
         return $this->file; 
+    }
+
+    protected function exportResultFile($tickets)
+    {
+        $file = fopen($this->output, 'w');
+        fwrite($file, json_encode($tickets, JSON_PRETTY_PRINT));   
+        fclose($file);
     }
 
     protected function returnArrayFromFile()
@@ -79,10 +94,44 @@ class ClassificateTickets extends Command
         }
     }
 
-    protected function saveResultFile($tickets)
+    protected function saveTickets($tickets)
     {
-        $file = fopen($this->output, 'w');
-        fwrite($file, json_encode($tickets, JSON_PRETTY_PRINT));   
-        fclose($file);
+        foreach ($tickets as $ticket)
+        {
+            $ticketRecord = Tickets::find($ticket["TicketID"]);
+
+            if ($ticketRecord == null) 
+            {            
+                Tickets::create([
+                    "id" => $ticket["TicketID"],
+                    "categories_id" => $ticket["CategoryID"], 
+                    "customers_id" => $ticket["CustomerID"], 
+                    "customer_name" => $ticket["CustomerName"], 
+                    "customer_email" => $ticket["CustomerEmail"], 
+                    "score" => $ticket["Score"], 
+                    "classification" => $ticket["Classification"],
+                    "created_at" => $ticket["DateCreate"],
+                    "updated_at" => $ticket["DateUpdate"]
+                ]);
+            }
+            else
+            {
+                $ticketRecord->update([
+                    "score" => $ticket["Score"], 
+                    "classification" => $ticket["Classification"],
+                    "updated_at" => $ticket["DateUpdate"]
+                ]);
+            }
+
+            foreach ($ticket["Interactions"] as $interaction)
+            {
+                Interactions::firstOrCreate([
+                    "tickets_id" => $ticket["TicketID"], 
+                    "subject" => $interaction["Subject"], 
+                    "message" => $interaction["Message"], 
+                    "sender" => $interaction["Sender"]
+                ]);
+            }
+        }
     }
 }
