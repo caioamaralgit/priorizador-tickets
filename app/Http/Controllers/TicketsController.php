@@ -68,7 +68,7 @@ class TicketsController extends Controller
 
         $priority = strtolower($priority) !== "alta" ? (strtolower($priority) !== "normal" ? null : "Normal") : "Alta";
 
-        $limit = (!is_numeric($limit) || $limit < 2) ? 2 : $limit;
+        $limit = (!is_numeric($limit) || $limit < 2) ? 5 : $limit;
 
         return [
             "direction" => $direction,
