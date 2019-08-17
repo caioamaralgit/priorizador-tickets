@@ -73,7 +73,7 @@ class ClassificateTickets extends Command
     protected function exportResultFile($tickets)
     {
         $file = fopen($this->output, 'w');
-        fwrite($file, json_encode($tickets, JSON_PRETTY_PRINT));   
+        fwrite($file, json_encode($tickets, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));   
         fclose($file);
     }
 
